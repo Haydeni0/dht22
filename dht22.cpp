@@ -3,11 +3,6 @@ Robust Adafruit DHT22 sensor reader
 
 Outputs temperature and humidity to the command line
 
-Compile with
-    g++ dht22.cpp -lwiringPi -Wall -o dht22.exe
-or for debug
-    g++ dht22.cpp -lwiringPi -Wall -DDEBUG -o dht22.exe
-
 Based on:
 http://www.uugear.com/portfolio/read-dht1122-temperature-humidity-sensor-from-raspberry-pi/
 
@@ -41,23 +36,7 @@ Other changes:
 
 */
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <wiringPi.h>
-
-#include <algorithm>
-#include <csignal>
-#include <iostream>
-
-// wiringPi pin number. Run the command ```gpio readall``` to check the wPi pin (compare to the
-// physical pins).
-// #define PIN 25
-// Define this at compile time with the compiler option -DPIN=25
-
-#define MAX_TIMINGS 85  // Takes 84 state changes to transmit data
-#define NBITS 40        // Total number of bits of data
-#define BAD_VALUE 999
+#include "dht22.h"
 
 #define DEFAULT_TEXT printf("\033[0m");
 #define BLACK_TEXT printf("\033[0;30m");
@@ -130,130 +109,139 @@ void twoMeans(const int (&x)[NBITS], bool (&assignUpper)[NBITS])
     }
 }
 
-class DhtSensor
+DhtSensor::DhtSensor(int pin) : m_pin{pin} {}
+
+/**
+ * Attempt to read humidity and temperature data from the sensor, and update the member variables
+ */
+void DhtSensor::read()
 {
-   public:
-    int m_pin;
-    float m_humidity{BAD_VALUE};
-    float m_temperature{BAD_VALUE};
+    uint8_t lastState = HIGH;
+    uint8_t stateDuration = 0;
+    uint8_t stateChanges = 0;
+    uint8_t bitsRead = 0;
+    float humidity = BAD_VALUE;
+    float temperature = BAD_VALUE;
 
-   public:
-    DhtSensor(int pin) : m_pin{pin} {}
+    int data[5] = {0, 0, 0, 0, 0};
+    int allStateDurations[NBITS];
+    for (int &elem : allStateDurations)
+        elem = BAD_VALUE;
 
-    void read()
-    {
-        uint8_t lastState = HIGH;
-        uint8_t stateDuration = 0;
-        uint8_t stateChanges = 0;
-        uint8_t bitsRead = 0;
-        float humidity = BAD_VALUE;
-        float temperature = BAD_VALUE;
+    /*
+    Signal Sensor we're ready to read by pulling pin UP for 10 milliseconds,
+    pulling pin down for 18 milliseconds and then back up for 40
+    microseconds.
+     */
+    pinMode(m_pin, OUTPUT);
+    digitalWrite(m_pin, HIGH);
+    delay(10);
+    digitalWrite(m_pin, LOW);
+    delay(18);
+    digitalWrite(m_pin, HIGH);
+    delayMicroseconds(40);
 
-        int data[5] = {0, 0, 0, 0, 0};
-        int allStateDurations[NBITS];
-        for (int &elem : allStateDurations)
-            elem = BAD_VALUE;
+    /* Read data from pin.  Look for a change in state. */
+    pinMode(m_pin, INPUT);
 
-        /*
-        Signal Sensor we're ready to read by pulling pin UP for 10 milliseconds,
-        pulling pin down for 18 milliseconds and then back up for 40
-        microseconds.
-         */
-        pinMode(m_pin, OUTPUT);
-        digitalWrite(m_pin, HIGH);
-        delay(10);
-        digitalWrite(m_pin, LOW);
-        delay(18);
-        digitalWrite(m_pin, HIGH);
-        delayMicroseconds(40);
+    for ((stateChanges = 0), (stateDuration = 0);
+         (stateChanges < MAX_TIMINGS) && (stateDuration < 255) && (bitsRead < NBITS);
+         stateChanges++) {
+        stateDuration = 0;
+        while ((digitalRead(m_pin) == lastState) && (stateDuration < 255)) {
+            stateDuration++;
+            delayMicroseconds(1);
+        };
 
-        /* Read data from pin.  Look for a change in state. */
-        pinMode(m_pin, INPUT);
+        lastState = digitalRead(m_pin);
 
-        for ((stateChanges = 0), (stateDuration = 0);
-             (stateChanges < MAX_TIMINGS) && (stateDuration < 255) && (bitsRead < NBITS);
-             stateChanges++) {
-            stateDuration = 0;
-            while ((digitalRead(m_pin) == lastState) && (stateDuration < 255)) {
-                stateDuration++;
-                delayMicroseconds(1);
-            };
-
-            lastState = digitalRead(m_pin);
-
-            // First 2 state changes are sensor signaling ready to send, ignore
-            // them. Each bit is preceeded by a state change to mark its
-            // beginning, ignore it too.
-            if ((stateChanges > 2) && (stateChanges % 2 == 0)) {
-                allStateDurations[bitsRead] = stateDuration;
-                bitsRead++;
-            }
+        // First 2 state changes are sensor signaling ready to send, ignore
+        // them. Each bit is preceeded by a state change to mark its
+        // beginning, ignore it too.
+        if ((stateChanges > 2) && (stateChanges % 2 == 0)) {
+            allStateDurations[bitsRead] = stateDuration;
+            bitsRead++;
         }
+    }
 
-        for (int elem : allStateDurations) {
-            if (elem == BAD_VALUE) {
-                m_humidity = BAD_VALUE;
-                m_temperature = BAD_VALUE;
-                return;
-            }
+    for (int elem : allStateDurations) {
+        if (elem == BAD_VALUE) {
+            m_humidity = BAD_VALUE;
+            m_temperature = BAD_VALUE;
+            return;
         }
-        bool stateData[NBITS];
-        twoMeans(allStateDurations, stateData);
+    }
+    bool stateData[NBITS];
+    twoMeans(allStateDurations, stateData);
 
-        for (int j = 0; j < NBITS; j++) {
-            data[j / 8] <<= 1;  // Each array element has 8 bits.  Shift Left 1 bit.
-            // if (allStateDurations[j] > 16)  // A State Change > 16 microseconds is a '1'.
-            if (stateData[j])  // A state with a duration assigned to an upper cluster is a '1'
-                data[j / 8] |= 0x00000001;
-        }
+    for (int j = 0; j < NBITS; j++) {
+        data[j / 8] <<= 1;  // Each array element has 8 bits.  Shift Left 1 bit.
+        // if (allStateDurations[j] > 16)  // A State Change > 16 microseconds is a '1'.
+        if (stateData[j])  // A state with a duration assigned to an upper cluster is a '1'
+            data[j / 8] |= 0x00000001;
+    }
 
 #ifdef DEBUG
-        // Print state duration
-        // Colour correctly decoded values by the previous method as TEAL or DEFAULT
-        // Colour incorrectly decoded values by the previous method, but correctly identified by the
-        // new method as RED
-        for (int j = 0; j < NBITS; j++) {
-            if (allStateDurations[j] > 16 && stateData[j])
-                TEAL_TEXT
-            else if (allStateDurations[j] < 16 && stateData[j])
-                RED_TEXT
-            else if (allStateDurations[j] > 16 && !stateData[j])
-                RED_TEXT
+    // Print state duration
+    // Colour correctly decoded values by the previous method as TEAL or DEFAULT
+    // Colour incorrectly decoded values by the previous method, but correctly identified by the
+    // new method as RED
+    for (int j = 0; j < NBITS; j++) {
+        if (allStateDurations[j] > 16 && stateData[j])
+            TEAL_TEXT
+        else if (allStateDurations[j] < 16 && stateData[j])
+            RED_TEXT
+        else if (allStateDurations[j] > 16 && !stateData[j])
+            RED_TEXT
 
-            if (allStateDurations[j] == BAD_VALUE) BLACK_TEXT
-            printf("%3d", allStateDurations[j]);
-            DEFAULT_TEXT
+        if (allStateDurations[j] == BAD_VALUE) BLACK_TEXT
+        printf("%3d", allStateDurations[j]);
+        DEFAULT_TEXT
 
-            if ((j != 0) && (j % 8 == 7))
-                printf("║");
-            else
-                printf("|");
-        }
+        if ((j != 0) && (j % 8 == 7))
+            printf("║");
+        else
+            printf("|");
+    }
 #endif
 
-        /*
-        Read 40 bits. (Five elements of 8 bits each)  Last element is a
-        checksum.
-        */
-        if ((bitsRead >= NBITS) && (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xFF))) {
-            humidity = (float)((data[0] << 8) + data[1]) / 10.0;
-            temperature = (float)((data[2] << 8) + data[3]) / 10.0;
-            if (data[2] & 0x80)  // Negative Sign Bit on.
-                temperature *= -1;
-        }
-
-        // Update members
-        m_humidity = humidity;
-        m_temperature = temperature;
+    /*
+    Read 40 bits. (Five elements of 8 bits each)  Last element is a
+    checksum.
+    */
+    if ((bitsRead >= NBITS) && (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xFF))) {
+        humidity = (float)((data[0] << 8) + data[1]) / 10.0;
+        temperature = (float)((data[2] << 8) + data[3]) / 10.0;
+        if (data[2] & 0x80)  // Negative Sign Bit on.
+            temperature *= -1;
     }
-};
 
-int main(void)
+    // Update members
+    m_humidity = humidity;
+    m_temperature = temperature;
+}
+
+int main(int argc, char *argv[])
 {
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " pin"
+                  << "\n";
+        return 1;
+    }
+
     if (wiringPiSetup() == -1) {
         std::cout << "wiringPi setup failed";
-        exit(1);
+        return 1;
     }
+
+    int pin;
+    try {
+        pin = std::stoi(argv[1]);
+    } catch (std::invalid_argument) {
+        std::cerr << "Invalid argument: " << argv[1] << "\n";
+        return 1;
+    }
+    DhtSensor sensor{pin};
 
 #ifdef DEBUG
     printf("DEBUG MODE: Displaying microseconds in each state.\n");
@@ -270,8 +258,6 @@ int main(void)
         printf("----");
     std::cout << "\n";
 #endif
-
-    DhtSensor sensor{PIN};
 
     int delayMilliseconds = 500;
     for (int i = 0; i < 1000; i++) {

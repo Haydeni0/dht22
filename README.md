@@ -61,10 +61,14 @@ Map the ```Physical``` pin, on your Raspberry Pi that the DHT22 data line is con
 
 ### Compile and run
 
-Define the pin to use at compile time using the option ```-DPIN```. For example, I'm using ```wPi``` pin 25.
+Compile using ```g++```
 
-    g++ dht22.cpp -lwiringPi -Wall -DPIN=25 -o dht22.exe
+    g++ dht22.cpp -lwiringPi -o dht22.exe
 
-To view the debug table showing the results of the robust decoder (read the comments in [dht22.cpp](./dht22.cpp) file for more info), use the ```-DDEBUG``` option.
+> To view the debug table showing the results of the robust decoder, use the ```-DDEBUG``` compile option.
+>
+>     g++ dht22.cpp -lwiringPi -DDEBUG -o dht22.exe
 
-    g++ dht22.cpp -lwiringPi -Wall -DPIN=25 -DDEBUG -o dht22.exe
+Run, giving the pin number as an argument (in this example I use pin 25)
+
+    ./dht22.exe 25
