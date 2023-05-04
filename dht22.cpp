@@ -24,19 +24,7 @@ int main(int argc, char *argv[])
     DhtSensor sensor{pin};
 
 #ifdef DEBUG
-    printf("DEBUG MODE: Displaying microseconds in each state.\n");
-    printf("Rows with \033[0;31mRED\033[0m text would have been previously decoded wrongly.\n");
-    for (int j{0}; j < NBITS; j++) {
-        printf("%3d", j);
-        if ((j != 0) && (j % 8 == 7))
-            printf("║");
-        else
-            printf("|");
-    }
-    std::cout << "\n";
-    for (int j{0}; j < NBITS; j++)
-        printf("----");
-    std::cout << "\n";
+    DhtSensor::printSignalTitle();
 #endif
 
     int delayMilliseconds = 500;

@@ -15,11 +15,11 @@
 
 void twoMeans(const int (&x)[NBITS], bool (&assignUpper)[NBITS]);
 
-enum DhtReadType{
-    GOOD, // Data is read and checksum passes
-    BAD, // Data is read and checksum fails
-    ERROR, // Attempt to read data, but can't
-    NONE, // No attempt to read data
+enum DhtReadType {
+    GOOD,   // Data is read and checksum passes
+    BAD,    // Data is read and checksum fails
+    ERROR,  // Attempt to read data, but can't
+    NONE,   // No attempt to read data
 };
 
 class DhtSensor
@@ -30,18 +30,25 @@ class DhtSensor
     float m_temperature{BAD_VALUE};
     DhtReadType m_readType{NONE};
 
+    int m_signalStateDurations[NBITS];
+    bool m_signalData[NBITS];
+
    public:
-   /**
-    * @brief Construct a new DhtSensor object
-    * 
-    * @param pin wiringPi pin number to read from (run the command ```gpio readall``` to find wPi pin)
-    */
+    /**
+     * @brief Construct a new DhtSensor object
+     *
+     * @param pin wiringPi pin number to read from (run the command ```gpio readall``` to find wPi
+     * pin)
+     */
     DhtSensor(int pin);
 
     /**
-     * Attempt to read humidity and temperature data from the sensor, and update the member variables
+     * Attempt to read humidity and temperature data from the sensor, and update the member
+     * variables
      */
     void read();
-    
-};
 
+    static void printSignalTitle();
+
+    void printSignal();
+};

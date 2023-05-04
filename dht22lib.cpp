@@ -121,8 +121,8 @@ void DhtSensor::read()
     float temperature = BAD_VALUE;
 
     int data[5] = {0, 0, 0, 0, 0};
-    int allStateDurations[NBITS];
-    for (int &elem : allStateDurations)
+    /// Reset saved state durations
+    for (int &elem : m_signalStateDurations)
         elem = BAD_VALUE;
 
     /*
@@ -156,51 +156,31 @@ void DhtSensor::read()
         // them. Each bit is preceeded by a state change to mark its
         // beginning, ignore it too.
         if ((stateChanges > 2) && (stateChanges % 2 == 0)) {
-            allStateDurations[bitsRead] = stateDuration;
+            m_signalStateDurations[bitsRead] = stateDuration;
             bitsRead++;
         }
     }
 
-    for (int elem : allStateDurations) {
+    // Make sure if all 40 bits are read, otherwise return with a bad read
+    for (int elem : m_signalStateDurations) {
         if (elem == BAD_VALUE) {
             m_humidity = BAD_VALUE;
             m_temperature = BAD_VALUE;
+
             m_readType = ERROR;
             return;
         }
     }
-    bool stateData[NBITS];
-    twoMeans(allStateDurations, stateData);
+    twoMeans(m_signalStateDurations, m_signalData);
 
     for (int j = 0; j < NBITS; j++) {
-        data[j / 8] <<= 1;  // Each array element has 8 bits.  Shift Left 1 bit.
-        // if (allStateDurations[j] > 16)  // A State Change > 16 microseconds is a '1'.
-        if (stateData[j])  // A state with a duration assigned to an upper cluster is a '1'
+        data[j / 8] <<= 1;    // Each array element has 8 bits.  Shift Left 1 bit.
+        if (m_signalData[j])  // A state with a duration assigned to an upper cluster is a '1'
             data[j / 8] |= 0x00000001;
     }
 
 #ifdef DEBUG
-    // Print state duration
-    // Colour correctly decoded values by the previous method as TEAL or DEFAULT
-    // Colour incorrectly decoded values by the previous method, but correctly identified by the
-    // new method as RED
-    for (int j = 0; j < NBITS; j++) {
-        if (allStateDurations[j] > 16 && stateData[j])
-            TEAL_TEXT
-        else if (allStateDurations[j] < 16 && stateData[j])
-            RED_TEXT
-        else if (allStateDurations[j] > 16 && !stateData[j])
-            RED_TEXT
-
-        if (allStateDurations[j] == BAD_VALUE) BLACK_TEXT
-        printf("%3d", allStateDurations[j]);
-        DEFAULT_TEXT
-
-        if ((j != 0) && (j % 8 == 7))
-            printf("║");
-        else
-            printf("|");
-    }
+    printSignal();
 #endif
 
     /*
@@ -222,3 +202,44 @@ void DhtSensor::read()
     m_temperature = temperature;
 }
 
+void DhtSensor::printSignalTitle()
+{
+    printf("DEBUG MODE: Displaying microseconds in each state.\n");
+    printf("Rows with \033[0;31mRED\033[0m text would have been previously decoded wrongly.\n");
+    for (int j{0}; j < NBITS; j++) {
+        printf("%3d", j);
+        if ((j != 0) && (j % 8 == 7))
+            printf("║");
+        else
+            printf("|");
+    }
+    std::cout << "\n";
+    for (int j{0}; j < NBITS; j++)
+        printf("----");
+    std::cout << "\n";
+}
+
+void DhtSensor::printSignal()
+{
+    // Print state duration
+    // Colour correctly decoded values by the previous method as TEAL or DEFAULT
+    // Colour incorrectly decoded values by the previous method, but correctly identified by the
+    // new method as RED
+    for (int j = 0; j < NBITS; j++) {
+        if (m_signalStateDurations[j] > 16 && m_signalData[j])
+            TEAL_TEXT
+        else if (m_signalStateDurations[j] < 16 && m_signalData[j])
+            RED_TEXT
+        else if (m_signalStateDurations[j] > 16 && !m_signalData[j])
+            RED_TEXT
+
+        if (m_signalStateDurations[j] == BAD_VALUE) BLACK_TEXT
+        printf("%3d", m_signalStateDurations[j]);
+        DEFAULT_TEXT
+
+        if ((j != 0) && (j % 8 == 7))
+            printf("║");
+        else
+            printf("|");
+    }
+}
