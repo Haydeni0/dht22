@@ -1,4 +1,4 @@
-# Robust Adafruit DHT22 sensor reader
+# Robust Adafruit DHT22 sensor reader in C++, using wiringPi
 
 ## Why is this "robust"?
 
