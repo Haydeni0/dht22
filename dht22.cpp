@@ -30,6 +30,9 @@ int main(int argc, char *argv[])
     int delayMilliseconds = 500;
     for (int i = 0; i < 1000; i++) {
         sensor.read();
+#ifdef DEBUG
+        sensor.printSignal();
+#endif
         switch (sensor.m_readType) {
             case GOOD:
                 printf("%-3.1f *C  Humidity: %-3.1f%%\n", sensor.m_temperature, sensor.m_humidity);
@@ -38,14 +41,12 @@ int main(int argc, char *argv[])
                 printf("Failed checksum\n");
                 break;
             case ERROR:
-                printf("ERROR, no data read\n");
+                printf("ERROR, failed reading data\n");
                 break;
             default:
                 std::cerr << "This shouldn't happen\n";
                 return 1;
         }
-
-        
 
         delay(delayMilliseconds);  // Wait between readings
     }

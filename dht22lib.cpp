@@ -179,10 +179,6 @@ void DhtSensor::read()
             data[j / 8] |= 0x00000001;
     }
 
-#ifdef DEBUG
-    printSignal();
-#endif
-
     /*
     Read 40 bits. (Five elements of 8 bits each)  Last element is a
     checksum.

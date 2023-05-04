@@ -18,7 +18,7 @@ void twoMeans(const int (&x)[NBITS], bool (&assignUpper)[NBITS]);
 enum DhtReadType {
     GOOD,   // Data is read and checksum passes
     BAD,    // Data is read and checksum fails
-    ERROR,  // Attempt to read data, but can't
+    ERROR,  // Attempt to read data, but failed
     NONE,   // No attempt to read data
 };
 
