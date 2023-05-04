@@ -4,7 +4,7 @@
 
 This is an improvement on a [previous implementation](http://www.uugear.com/portfolio/read-dht1122-temperature-humidity-sensor-from-raspberry-pi/), and many others that use fixed thresholds for decoding.
 
-In certain circumstances the new implementation significantly reduces error rate (e.g., in one recorded scenario from 40% to <1%), for the reasons described below.
+In certain circumstances the new implementation significantly reduces error rate when reading from the sensor (e.g., in one recorded scenario from 40% to <1%), for the reasons described below.
 
 ### New decoder
 
@@ -19,7 +19,7 @@ microseconds (1 byte only):
 
              Signal A: ( 3, 2, 3, 8, 8, 9, 8, 3)
              Signal B: ( 9, 9, 9,32,33,33,32, 8)
-             Signal C: (25,26,26,24,84,84,85,23)
+             Signal C: (25,26,26,74,73,74,75,23)
     True decoded data: ( 0, 0, 0, 1, 1, 1, 1, 0)
 
 It is clear to see that the encoded data is present in all signals, but with a fixed threshold
