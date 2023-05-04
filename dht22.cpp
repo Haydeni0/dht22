@@ -111,9 +111,6 @@ void twoMeans(const int (&x)[NBITS], bool (&assignUpper)[NBITS])
 
 DhtSensor::DhtSensor(int pin) : m_pin{pin} {}
 
-/**
- * Attempt to read humidity and temperature data from the sensor, and update the member variables
- */
 void DhtSensor::read()
 {
     uint8_t lastState = HIGH;
@@ -168,6 +165,7 @@ void DhtSensor::read()
         if (elem == BAD_VALUE) {
             m_humidity = BAD_VALUE;
             m_temperature = BAD_VALUE;
+            m_readType = ERROR;
             return;
         }
     }
@@ -214,6 +212,9 @@ void DhtSensor::read()
         temperature = (float)((data[2] << 8) + data[3]) / 10.0;
         if (data[2] & 0x80)  // Negative Sign Bit on.
             temperature *= -1;
+        m_readType = GOOD;
+    } else {
+        m_readType = BAD;
     }
 
     // Update members
@@ -262,7 +263,22 @@ int main(int argc, char *argv[])
     int delayMilliseconds = 500;
     for (int i = 0; i < 1000; i++) {
         sensor.read();
-        printf("%-3.1f *C  Humidity: %-3.1f%%\n", sensor.m_temperature, sensor.m_humidity);
+        switch (sensor.m_readType) {
+            case GOOD:
+                printf("%-3.1f *C  Humidity: %-3.1f%%\n", sensor.m_temperature, sensor.m_humidity);
+                break;
+            case BAD:
+                printf("Failed checksum\n");
+                break;
+            case ERROR:
+                printf("ERROR, no data read\n");
+                break;
+            default:
+                std::cerr << "This shouldn't happen\n";
+                return 1;
+        }
+
+        
 
         delay(delayMilliseconds);  // Wait between readings
     }
