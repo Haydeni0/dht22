@@ -10,7 +10,7 @@ In certain circumstances the new implementation significantly reduces error rate
 
 In the previous implementation, the data
 (5 bytes: 2 each for humidity/temperature and 1 for a checksum)
-is decoded by classifying signal states as ```1``` or ```0``` depending if the duration held by the state is
+is decoded by classifying signal pulses sent by the DHT22 as ```1``` or ```0``` depending if the duration held by the state is
 longer than 16 microseconds or not.
 
 Sometimes, this classification is inaccurate and we get bad data, which is typically
@@ -18,12 +18,12 @@ invalidated by the checksum. To see why, here is realistic example of recorded s
 microseconds (1 byte only):
 
              Signal A: ( 3, 2, 3, 8, 8, 9, 8, 3)
-             Signal B: ( 7, 7, 7,32,33,33,32, 6)
-             Signal C: (21,22,22,86,84,84,85,23)
+             Signal B: ( 9, 9, 9,32,33,33,32, 8)
+             Signal C: (25,26,26,24,84,84,85,23)
     True decoded data: ( 0, 0, 0, 1, 1, 1, 1, 0)
 
-It is clear to see that the encoded data is present in all signals, but with the previous
-classification technique only signal B will be decoded correctly. I'm not sure exactly why
+It is clear to see that the encoded data is present in all signals, but with a fixed threshold
+of 16 microseconds only signal B will be decoded correctly. I'm not sure exactly why
 in some circumstances the state durations are longer/shorter. I've observed consistently
 shorter durations when running this in a docker container.
 
