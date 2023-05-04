@@ -2,7 +2,11 @@
 
 ## Why is this "robust"?
 
-This is an improvement on a [previous implementation](http://www.uugear.com/portfolio/read-dht1122-temperature-humidity-sensor-from-raspberry-pi/).
+This is an improvement on a [previous implementation](http://www.uugear.com/portfolio/read-dht1122-temperature-humidity-sensor-from-raspberry-pi/), and a bunch of others that also use this as a reference.
+
+In certain circumstances the new implementation significantly reduces error rate (e.g., in one recorded scenario from 40% to <1%), for the reasons described below.
+
+### New decoder
 
 In the previous implementation, the data
 (5 bytes: 2 each for humidity/temperature and 1 for a checksum)
