@@ -2,7 +2,7 @@
 
 ## Why is this "robust"?
 
-This is an improvement on a [previous implementation](http://www.uugear.com/portfolio/read-dht1122-temperature-humidity-sensor-from-raspberry-pi/), and a bunch of others that also use it as a reference.
+This is an improvement on a [previous implementation](http://www.uugear.com/portfolio/read-dht1122-temperature-humidity-sensor-from-raspberry-pi/), and many others that use fixed thresholds for decoding.
 
 In certain circumstances the new implementation significantly reduces error rate (e.g., in one recorded scenario from 40% to <1%), for the reasons described below.
 
