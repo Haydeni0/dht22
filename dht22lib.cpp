@@ -43,15 +43,7 @@ Other changes:
 #define TEAL_TEXT printf("\033[36;1m");
 #define RED_TEXT printf("\033[0;31m");
 
-/**
- * A k-means algorithm for 1 dimensional data, with k equal to 2.
- *
- * The two centroids are initialised at the minimum and maximum of the dataset
- *
- * @param Input data
- * @param Centroid assignments (1 for the upper centroid, 0 for the lower)
- */
-void twoMeans(const int (&x)[NBITS], bool (&assignUpper)[NBITS])
+void twoMeansDecoder(const int (&x)[NBITS], bool (&binaryAssignment)[NBITS])
 {
     // The initial values for the centroids are the minimum and maximum
     float lower = x[0];
@@ -62,7 +54,7 @@ void twoMeans(const int (&x)[NBITS], bool (&assignUpper)[NBITS])
     }
 
     // Reset assignments (assign all to the lower centroid)
-    for (bool &elem : assignUpper)
+    for (bool &elem : binaryAssignment)
         elem = false;
 
     while (true) {
@@ -94,7 +86,7 @@ void twoMeans(const int (&x)[NBITS], bool (&assignUpper)[NBITS])
         // Check convergence: k-means has converged if no assignments have changed
         bool converged = true;
         for (int j = 0; j < NBITS; j++) {
-            if (newAssignUpper[j] != assignUpper[j]) {
+            if (newAssignUpper[j] != binaryAssignment[j]) {
                 converged = false;
                 break;
             }
@@ -105,8 +97,24 @@ void twoMeans(const int (&x)[NBITS], bool (&assignUpper)[NBITS])
         upper = newUpper;
         lower = newLower;
         for (int j = 0; j < NBITS; j++)
-            assignUpper[j] = newAssignUpper[j];
+            binaryAssignment[j] = newAssignUpper[j];
     }
+}
+
+void splitDecoder(const int (&x)[NBITS], bool (&binaryAssignment)[NBITS])
+{
+    // Get minimum and maximum values of the x
+    int min = x[0];
+    int max = x[0];
+    for (int elem : x) {
+        if (elem < min) min = elem;
+        if (elem > max) max = elem;
+    }
+
+    int midpoint = min + (max - min) / 2;
+
+    for (int j = 0; j < NBITS; j++)
+        binaryAssignment[j] = midpoint < x[j];
 }
 
 DhtSensor::DhtSensor(int pin) : m_pin{pin} {}
@@ -171,7 +179,8 @@ void DhtSensor::read()
             return;
         }
     }
-    twoMeans(m_signalStateDurations, m_signalData);
+    twoMeansDecoder(m_signalStateDurations, m_signalData);
+    // splitDecoder(m_signalStateDurations, m_signalData);
 
     for (int j = 0; j < NBITS; j++) {
         data[j / 8] <<= 1;    // Each array element has 8 bits.  Shift Left 1 bit.

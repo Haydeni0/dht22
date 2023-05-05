@@ -13,7 +13,25 @@
 #define NBITS 40        // Total number of bits of data
 #define BAD_VALUE 999
 
-void twoMeans(const int (&x)[NBITS], bool (&assignUpper)[NBITS]);
+/**
+ * A decoder that uses the k-means algorithm (with k=2) to cluster the pulse durations
+ * 
+ * Pulses assigned to the upper cluster represent 1's.
+ * The two cluster centroids are initialised at the minimum and maximum of the dataset
+ *
+ * @param x Input data (pulse durations)
+ * @param binaryAssignment Pulse assignments based on input data
+ */
+void twoMeansDecoder(const int (&x)[NBITS], bool (&binaryAssignment)[NBITS]);
+
+/**
+ * A decoder that uses the midpoint between the minimum and maximum values of pulse durations
+ * to classify whether the pulse represents a 1 or 0
+ * 
+ * @param x Input data (pulse durations)
+ * @param binaryAssignment Pulse assignments based on input data
+ */
+void splitDecoder(const int (&x)[NBITS], bool (&binaryAssignment)[NBITS]);
 
 enum DhtReadType {
     GOOD,   // Data is read and checksum passes

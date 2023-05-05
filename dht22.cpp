@@ -3,9 +3,17 @@
 
 int main(int argc, char *argv[])
 {
+    // Parse inputs
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " pin"
                   << "\n";
+        return 1;
+    }
+    int pin;
+    try {
+        pin = std::stoi(argv[1]);
+    } catch (std::invalid_argument) {
+        std::cerr << "Invalid argument: " << argv[1] << "\n";
         return 1;
     }
 
@@ -14,19 +22,13 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    int pin;
-    try {
-        pin = std::stoi(argv[1]);
-    } catch (std::invalid_argument) {
-        std::cerr << "Invalid argument: " << argv[1] << "\n";
-        return 1;
-    }
     DhtSensor sensor{pin};
 
 #ifdef DEBUG
     DhtSensor::printSignalTitle();
 #endif
 
+    // Read from the sensor
     int delayMilliseconds = 500;
     for (int i = 0; i < 1000; i++) {
         sensor.read();
