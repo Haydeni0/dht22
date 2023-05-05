@@ -179,8 +179,10 @@ void DhtSensor::read()
             return;
         }
     }
+
+    // Use the k-means decoder instead of the split one, as it's slightly more robust with neglible
+    // runtime increase 
     twoMeansDecoder(m_signalStateDurations, m_signalData);
-    // splitDecoder(m_signalStateDurations, m_signalData);
 
     for (int j = 0; j < NBITS; j++) {
         data[j / 8] <<= 1;    // Each array element has 8 bits.  Shift Left 1 bit.
