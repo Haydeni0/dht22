@@ -22,7 +22,9 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (wiringPiSetup() == -1) {
+    // Set up wiringPi to use the regular GPIO pin numbers (http://wiringpi.com/reference/setup/)
+    // These are the ones labelled as BCM, on the map shown with command ```gpio readall```
+    if (wiringPiSetupGpio() == -1) {
         std::cout << "wiringPi setup failed";
         return 1;
     }

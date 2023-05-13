@@ -49,13 +49,13 @@ Install wiringPi to be able to interface with Raspberry Pi GPIO pins
 
 ---
 
-### Find the ```wPi``` pin your DHT22 is connected to
+### Find the GPIO pin your DHT22 is connected to
 
-Look at wiringPi's pin numbers
+Look at the pin numbers
 
     gpio readall
 
-Map the ```Physical``` pin, on your Raspberry Pi that the DHT22 data line is connected to, to the ```wPi``` pin.
+Map the ```Physical``` pin, on your Raspberry Pi that the DHT22 data line is connected to, to the ```BCM``` pin.
 
 ---
 
@@ -69,6 +69,6 @@ Compile using ```g++```
 >
 >     g++ dht22.cpp dht22lib.cpp -lwiringPi -DDEBUG -o dht22.exe
 
-Run, giving the pin number as an argument (in this example I use pin 25)
+Run, giving the pin number as an argument (in this example I use pin 13)
 
-    ./dht22.exe 25
+    ./dht22.exe 13
