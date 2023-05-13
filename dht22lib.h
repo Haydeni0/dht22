@@ -66,6 +66,11 @@ class DhtSensor
      */
     void read();
 
+    /**
+     * Print formatted temperature and humidity to stdout
+     */
+    void print();
+
     static void printSignalTitle();
 
     void printSignal();

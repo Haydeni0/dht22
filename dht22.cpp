@@ -1,3 +1,8 @@
+/*
+Compile with 
+    g++ dht22.cpp dht22lib.cpp -lwiringPi -DDEBUG -o dht22.exe
+*/
+
 
 #include "dht22lib.h"
 
@@ -31,24 +36,11 @@ int main(int argc, char *argv[])
     // Read from the sensor
     int delayMilliseconds = 500;
     for (int i = 0; i < 1000; i++) {
-        sensor.read();
+        // sensor.read();
 #ifdef DEBUG
         sensor.printSignal();
 #endif
-        switch (sensor.m_readType) {
-            case GOOD:
-                printf("%-3.1f *C  Humidity: %-3.1f%%\n", sensor.m_temperature, sensor.m_humidity);
-                break;
-            case BAD:
-                printf("Failed checksum\n");
-                break;
-            case ERROR:
-                printf("ERROR, failed reading data\n");
-                break;
-            default:
-                std::cerr << "This shouldn't happen\n";
-                return 1;
-        }
+        sensor.print();
 
         delay(delayMilliseconds);  // Wait between readings
     }

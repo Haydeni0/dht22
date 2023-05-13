@@ -181,7 +181,7 @@ void DhtSensor::read()
     }
 
     // Use the k-means decoder instead of the split one, as it's slightly more robust with neglible
-    // runtime increase 
+    // runtime increase
     twoMeansDecoder(m_signalStateDurations, m_signalData);
 
     for (int j = 0; j < NBITS; j++) {
@@ -207,6 +207,26 @@ void DhtSensor::read()
     // Update members
     m_humidity = humidity;
     m_temperature = temperature;
+}
+
+void DhtSensor::print()
+{
+    switch (m_readType) {
+        case GOOD:
+            printf("%-3.1f *C  Humidity: %-3.1f%%\n", m_temperature, m_humidity);
+            break;
+        case BAD:
+            printf("Failed checksum\n");
+            break;
+        case ERROR:
+            printf("ERROR, failed reading data\n");
+            break;
+        case NONE:
+            printf("No attempt made to read data\n");
+            break;
+        default:
+            std::cerr << "This shouldn't happen\n";
+    }
 }
 
 void DhtSensor::printSignalTitle()
