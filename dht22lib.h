@@ -14,8 +14,8 @@
 #define BAD_VALUE 999
 
 /**
- * A decoder that uses the k-means algorithm (with k=2) to cluster the pulse durations
- * 
+ * @brief A decoder that uses the k-means algorithm (with k=2) to cluster the pulse durations
+ *
  * Pulses assigned to the upper cluster represent 1's.
  * The two cluster centroids are initialised at the minimum and maximum of the dataset
  *
@@ -25,9 +25,11 @@
 void twoMeansDecoder(const int (&x)[NBITS], bool (&binaryAssignment)[NBITS]);
 
 /**
+ * @brief Midpoint decoder
+ *
  * A decoder that uses the midpoint between the minimum and maximum values of pulse durations
  * to classify whether the pulse represents a 1 or 0
- * 
+ *
  * @param x Input data (pulse durations)
  * @param binaryAssignment Pulse assignments based on input data
  */
@@ -61,13 +63,13 @@ class DhtSensor
     DhtSensor(int pin);
 
     /**
-     * Attempt to read humidity and temperature data from the sensor, and update the member
+     * @brief Attempt to read humidity and temperature data from the sensor, and update the member
      * variables
      */
     void read();
 
     /**
-     * Print formatted temperature and humidity to stdout
+     * @brief Print formatted temperature and humidity to stdout
      */
     void print();
 
