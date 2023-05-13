@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     // Read from the sensor
     int delayMilliseconds = 500;
     for (int i = 0; i < 1000; i++) {
-        // sensor.read();
+        sensor.read();
 #ifdef DEBUG
         sensor.printSignal();
 #endif
